@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title></title>
+        <link rel="stylesheet" href="css/main.css">
+    </head>
+    <body>
+        <div id = "top-bar">
+            <div id = "buttons">
+                <a href="#" class="button" id = "status">Not Connected</a>
+                <a href="#" class="button pull-right" id = "show-controls">Controls</a>
+            </div>
+            <div id = "controls" class = "container">
+                <h2>Response</h2>
+                <textarea id ="response"></textarea>
+                <a href="#" class="button pull-right" id = "update-response">Update Response</a>
+            </div>
+        </div>
+        <div class = "container">
+            <div id = "controls">
+                <textarea id ="response"></textarea>
+            </div>
+            <div id = "requests"></div>
+        </div>
+
+        <script src="js/jquery.min.js"></script>
+        <script src="js/main.js"></script>
+        <script src="js/mustache.min.js"></script>
+        <script id="request-template" type="text/html">
+            <div class = "request">
+                <span class = "timestamp">{{timestamp}}</span>
+                <h1>{{method}} -- {{path}}</h1>
+                <h2>Headers</h2>
+                <ul class = "headers">
+                    {{#headers}}
+                     <li>{{>name_value}}</li>
+                    {{/headers}}
+                </ul>
+                <h2>Cookies</h2>
+                <ul class = "cookies">
+                    {{#cookies}}
+                     <li>{{>name_value}}</li>
+                    {{/cookies}}
+                </ul>
+                <h2>Parameters</h2>
+                <ul class = "params">
+                    {{#params}}
+                     <li>{{>name_value}}</li>
+                    {{/params}}
+                </ul>
+                <h2>Raw Request Body</h2>
+                <pre>{{request_body}}</pre>
+            </div>
+        </script>
+
+        <script id="name-value-template" type="text/html">
+            {{name}}: {{value}}
+        </script>
+
+    </body>
+</html>
