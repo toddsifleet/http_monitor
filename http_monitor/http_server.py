@@ -10,6 +10,27 @@ import StringIO
 from datetime import datetime
 import Cookie
 
+#this could be done better but for now it is global
+monitor_response = 'SUCCESS'
+
+def parse_post_data(fp, headers):
+    field_storage = cgi.FieldStorage(
+        fp = fp,
+        headers = headers,
+        environ = {
+            'REQUEST_METHOD':'POST',
+            'CONTENT_TYPE': headers.getheader('content-type'),
+        }
+    )
+    
+    params = []
+    for key in field_storage.keys():
+        params.append({
+            'name': key,
+            'value': field_storage[key].value
+        })
+    return params
+
 class StaticHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     '''A basic request TestHandler
 
@@ -29,6 +50,15 @@ class StaticHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             self.path = 'assets%s' % self.path
         return SimpleHTTPServer.SimpleHTTPRequestHandler.do_GET(self)
 
+    def do_POST(self):
+        global monitor_response
+        params = parse_post_data(self.rfile, self.headers)
+        try:
+            monitor_response = params[0]["value"]
+        except:
+            return
+        self.send_response(200)
+
     def log_message(*args):
         return
 
@@ -43,7 +73,6 @@ class MonitorHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         self.payload = {
             'params': dict_to_array(params, lambda x: x[0])
         }
-        print params
         self.handle_request()
         
     def do_POST(self):
@@ -52,25 +81,12 @@ class MonitorHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         fake_body = StringIO.StringIO()
         fake_body.write(body)
         fake_body.seek(0)
-        field_storage = cgi.FieldStorage(
-            fp = fake_body,
-            headers = self.headers,
-            environ = {
-                'REQUEST_METHOD':'POST',
-                'CONTENT_TYPE': self.headers.getheader('content-type'),
-            }
-        )
-        
-        params = []
-        for key in field_storage.keys():
-            params.append({
-                'name': key,
-                'value': field_storage[key].value
-            })
+        params = parse_post_data(fake_body, self.headers)
         self.payload = {
             'content_length': length,
             'request_body': body,
-            'params': params
+            'params': params,
+            'response': monitor_response
         }
         self.handle_request()
 
@@ -79,7 +95,7 @@ class MonitorHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         self.send_header('Content-type','text/html')
         self.end_headers()
         self.put_request()
-        self.wfile.write(self.command)
+        self.wfile.write(monitor_response)
 
     def get_cookies(self):
         cookie = Cookie.SimpleCookie()
@@ -99,7 +115,6 @@ class MonitorHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             'timestamp': datetime.now().strftime("%c")
         })
         self.message_queue.put(self.payload)
-        print self.payload
 
     def log_message(*args):
         pass
@@ -151,10 +166,9 @@ def dict_to_array(input, value_transform = lambda x: x):
     output = []
     for name, value in input.items():
         name, value = name.strip(), value_transform(value).strip()
-        if not (name or value):
-            continue 
-        output.append({
-            'name': name,
-            'value': value
-        })
+        if name or value:
+            output.append({
+                'name': name,
+                'value': value
+            })
     return output    

@@ -4,7 +4,6 @@ var connected = false;
 var host = "localhost"
 var port = "1234"
 function connect() {
-    console.log('here')
     if (try_count-- <= 0) {
         $("#status").html('Error Connecting')
         return;
@@ -53,7 +52,17 @@ function init() {
     });
 
     $("#status").on("click", toggle_connection);
+    $("#update-response").on("click", update_response);
     connect();
 }
+
+function update_response() {
+    var response = $("#response").val();
+    $.post("/update-response", {response: response}, function victory() {
+        $("#controls").slideToggle();
+    });
+}
+
+
 //this should modified to make it work in i.e.
 $(document).ready(init);

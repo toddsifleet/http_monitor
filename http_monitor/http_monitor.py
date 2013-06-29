@@ -23,7 +23,7 @@ class HttpMonitor(object):
     def run(self):
         start_http_servers(self.messages)
         start_socket_server(self.new_connections)
-        while 1:
+        while True:
             while not self.new_connections.empty():
                 self.clients.append(self.new_connections.get())
             if not self.messages.empty() and self.clients:
