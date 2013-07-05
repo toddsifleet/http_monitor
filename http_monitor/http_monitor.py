@@ -23,11 +23,20 @@ class HttpMonitor(object):
     def run(self):
         start_http_servers(self.messages)
         start_socket_server(self.new_connections)
-        while True:
-            while not self.new_connections.empty():
-                self.clients.append(self.new_connections.get())
-            if not self.messages.empty() and self.clients:
-                self.send_message(self.messages.get())
+        try:
+            while True:
+                self.process_clients()
+                self.process_messages()
+        except KeyboardInterrupt:
+            print "shutting down..."
+
+    def process_clients(self):
+        while not self.new_connections.empty():
+            self.clients.append(self.new_connections.get())
+
+    def process_messages(self):
+        while not self.messages.empty() and self.clients:
+            self.send_message(self.messages.get())
 
     def send_message(self, message):
         clients = self.clients[:]
@@ -36,7 +45,8 @@ class HttpMonitor(object):
             if client.send(json.dumps(message)):
                 self.clients.append(client)
 
-monitor = HttpMonitor()
-monitor.run()
+if __name__ == '__main__':
+    monitor = HttpMonitor()
+    monitor.run()
 
 
